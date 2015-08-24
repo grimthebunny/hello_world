@@ -4,7 +4,7 @@
 #include <getopt.h>
 #include <pthread.h>
 
-/* Linked list object */
+/* Linked list object (initial structure definition) */
 typedef struct s_word_object word_object;
 struct s_word_object {
     char *word;
@@ -21,36 +21,37 @@ static pthread_cond_t list_data_flush = PTHREAD_COND_INITIALIZER;
 static void add_to_list(char *word) {
     word_object *last_object, *tmp_object;
 
-    char *tmp_string = strdup(word);
-    tmp_object = malloc(sizeof(word_object));
+    char *tmp_string = strdup(word); //create a pointer to the 
+    tmp_object = malloc(sizeof(word_object)); //create a new tmp_object
 
     pthread_mutex_lock(&list_lock);
 
-    if (list_head == NULL) {
-	last_object = tmp_object;	
-	list_head = last_object;
+    if (list_head == NULL) {  //initialisation of the first object
+	last_object = tmp_object; //assigns the last object pointer to the temp object	
+	list_head = last_object; //assigns the head of the list pointer to the temp object
     } else {
-	last_object = list_head;
-	while (last_object->next) {
-	    last_object = last_object->next;
+	last_object = list_head; //set Last object pointer to the start of the structure
+	while (last_object->next) { //while the current objects next does not point to NULL
+	    last_object = last_object->next; //change the last object pointer to the next object
 	}
-	last_object->next = tmp_object;
-	last_object = last_object->next;
+	last_object->next = tmp_object; //set the next pointer to the temp object
+	last_object = last_object->next; // set the last object position to the temp object
     }
-    last_object->word = tmp_string;
-    last_object->next = NULL;
+    last_object->word = tmp_string; //assign the pointer to the input string to the temp object
+    last_object->next = NULL; //assign the next of the temp object to a NULL pointer
 
     pthread_mutex_unlock(&list_lock);
     pthread_cond_signal(&list_data_ready);
 }
 
-static word_object *list_get_first(void) {
+static word_object *list_get_first(void) { //grabs the current header object and assigns the next object in the structure and the new header
     word_object *first_object;
 
-    first_object = list_head;
-    list_head = list_head->next;
+    first_object = list_head; // grab the current list header
 
-    return first_object;
+    list_head = list_head->next; //set the next element as the list header
+
+    return first_object; //return the list header obtained above
 }
 
 static void *print_func(void *arg) {
@@ -65,13 +66,13 @@ static void *print_func(void *arg) {
 	    pthread_cond_wait(&list_data_ready, &list_lock);
 	}
 
-	current_object = list_get_first();
+	current_object = list_get_first(); //use the function to grab the next element of the list
 
 	pthread_mutex_unlock(&list_lock);
 
-	printf("Print thread: %s\n", current_object->word);
-	free(current_object->word);
-	free(current_object);
+	printf("Print thread: %s\n", current_object->word); //print the word stored in the structure
+	free(current_object->word); //free the memorry location for the word object
+	free(current_object); //free the memory location for the current object
 
 	pthread_cond_signal(&list_data_flush);
     }
