@@ -100,6 +100,7 @@ static void list_flush(void) {
 }
 
 static void start_server(void) {
+	#define QUIT_STRING "exit"
 	int socket_fd;
 	struct sockaddr_in server_address;
 	struct sockaddr_in client_address;
@@ -109,7 +110,7 @@ static void start_server(void) {
 	int bytes;
 	char data[DATA_LENGTH];
 	pthread_t print_thread;
-
+	
 	fprintf(stderr, "Starting server\n");
 
 	pthread_create(&print_thread, NULL, print_func, NULL);
@@ -145,7 +146,8 @@ static void start_server(void) {
 			exit(1);
 		}
 		/* Process data */
-		add_to_list(data);
+		if(!strcmp(data, QUIT_STRING)) want_quit=1;
+		else add_to_list(data);
 	}
 	list_flush();
 }
@@ -171,7 +173,9 @@ static void start_client(int count) {
 		if (send(sock_fd, input_word, strlen(input_word) + 1, 0) < 0) {
 			fprintf(stderr, "Send failed\n");
 			exit(1);
-		}	
+		}
+		else
+			if(strcmp(input_word, "exit")==0) exit(0);
 		if (!--count) break;
 	}
 }
