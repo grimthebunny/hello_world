@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <modbus.h>
+#include <errno.h>
 
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT 10000
@@ -180,6 +182,40 @@ static void start_client(int count) {
 	}
 }
 
+int modb(void){
+	int i;
+	int rc;
+	uint16_t tab_reg[128];
+	modbus_t *ctx;
+	
+	ctx = modbus_new_tcp("140.159.153.159", 502);
+	if (ctx == NULL) {
+    		fprintf(stderr, "Unable to allocate libmodbus context\n");
+        	return -1;
+	}
+
+	if (modbus_connect(ctx) == -1) {
+  	printf("con failed");
+	fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+	        modbus_free(ctx);
+		return -1;
+	}
+
+	rc = modbus_read_registers(ctx, 0, 3, tab_reg);
+	if (rc == -1) {
+    		fprintf(stderr, "%s\n", modbus_strerror(errno));
+        	return -1;
+	}
+
+	for (i=0; i < rc; i++) {
+	    printf("reg[%d]=%d (0x%X)\n", i, tab_reg[i], tab_reg[i]);
+	}
+
+	    modbus_close(ctx);
+	    modbus_free(ctx);
+
+}
+
 int main(int argc, char **argv) {
 	int c;
 	int option_index = 0;
@@ -191,7 +227,7 @@ int main(int argc, char **argv) {
 		{0, 0, 0, 0 }
 	};
 	while (1) {
-		c = getopt_long(argc, argv, "c:s", long_options, &option_index);
+		/* c = getopt_long(argc, argv, "c:s", long_options, &option_index);
 		if (c == -1)
 			break;
 		switch (c) {
@@ -201,9 +237,11 @@ int main(int argc, char **argv) {
 			case 's':
 				server = 1;
 				break;
-		}
+		}*/
+	modb();	
+	sleep(1);
 	}
-	if (server) start_server();
-	else start_client(count);
+	//if (server) start_server();
+	//else start_client(count);
 	return 0;
 }
