@@ -79,7 +79,7 @@ static void *print_func(void *arg) {
 
 	pthread_mutex_unlock(&list_lock);
 
-	printf("Print thread: %s\n", current_object->word); //print the word stored in the structure
+	printf("%s\n", current_object->word); //print the word stored in the structure
 	free(current_object->word); //free the memorry location for the word object
 	free(current_object); //free the memory location for the current object
 
@@ -186,6 +186,7 @@ int modb(void){
 	int i;
 	int rc;
 	uint16_t tab_reg[128];
+	char sending[64];
 	modbus_t *ctx;
 	
 	ctx = modbus_new_tcp("140.159.153.159", 502);
@@ -208,7 +209,9 @@ int modb(void){
 	}
 
 	for (i=0; i < rc; i++) {
-	    printf("reg[%d]=%d (0x%X)\n", i, tab_reg[i], tab_reg[i]);
+	   sprintf(sending,"reg[%d]=%d (0x%X)", i, tab_reg[i], tab_reg[i]);
+	   add_to_list(sending);
+	   // printf("reg[%d]=%d (0x%X)\n", i, tab_reg[i], tab_reg[i]);
 	}
 
 	    modbus_close(ctx);
@@ -226,6 +229,8 @@ int main(int argc, char **argv) {
 		{"server", no_argument, 0, 's'},
 		{0, 0, 0, 0 }
 	};
+	pthread_t print_thread;
+	pthread_create(&print_thread, NULL, print_func, NULL);
 	while (1) {
 		/* c = getopt_long(argc, argv, "c:s", long_options, &option_index);
 		if (c == -1)
