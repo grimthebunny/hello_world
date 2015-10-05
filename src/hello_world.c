@@ -263,7 +263,7 @@ int modb(void){
 		return -1;
 	}
 
-	rc = modbus_read_registers(ctx, 12, 3, tab_reg);
+	rc = modbus_read_registers(ctx, 12, 1, tab_reg);
 	if (rc == -1) {
     		fprintf(stderr, "%s\n", modbus_strerror(errno));
         	return -1;
